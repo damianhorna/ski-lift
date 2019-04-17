@@ -3,7 +3,7 @@
 #include <stdlib.h> 
 #include <limits.h> 
 
-struct QueueElement
+typedef struct QueueElement
 {
 	int id;
 	int time;
@@ -12,26 +12,26 @@ struct QueueElement
 	struct QueueElement *next;
 } QueueElement;
 
-struct Queue 
+typedef struct Queue 
 { 
-	struct QueueElement *head;
+	QueueElement *head;
 	int size;
 }Queue; 
 
-struct Queue* createQueue(struct QueueElement* firstElement) 
+struct Queue* createQueue(QueueElement* firstElement) 
 { 
-	struct Queue* queue = (struct Queue*) malloc(sizeof(struct Queue)); 
+	Queue* queue = (Queue*) malloc(sizeof(Queue)); 
 	queue->head = firstElement; 
 	queue->size = 1;  
 	return queue; 
 } 
   
-int isEmpty(struct Queue* queue) 
+int isEmpty(Queue* queue) 
 {  return (queue->size == 0); } 
   
-void enqueue(struct Queue* queue, struct QueueElement* queueElement) 
+void enqueue(Queue* queue, QueueElement* queueElement) 
 { 
-	struct QueueElement *elem = queue->head;
+	QueueElement *elem = queue->head;
 	while(elem->next != NULL)
 	{
 		elem = elem->next;
@@ -41,12 +41,12 @@ void enqueue(struct Queue* queue, struct QueueElement* queueElement)
 	printf("element enqueued to queue\n"); 
 } 
   
-struct QueueElement* dequeue(struct Queue* queue) 
+struct QueueElement* dequeue(Queue* queue) 
 { 
 	if (isEmpty(queue)) 
 		return NULL; 
 
-	struct QueueElement* item = queue->head;
+	QueueElement* item = queue->head;
 	queue->head = item->next;
 	queue->size = queue->size - 1; 
 	return item; 
