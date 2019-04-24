@@ -8,7 +8,6 @@ typedef struct QueueElement {
     int id;
     int time;
     int weight;
-    struct QueueElement *previous;
     struct QueueElement *next;
 } QueueElement;
 
@@ -75,6 +74,45 @@ void printQueue(Queue *queue) {
     }
 }
 
+void swap(QueueElement *a, QueueElement *b) {
+    //DONT JUDGE ME OK
+    int temp = a->id;
+    a->id = b->id;
+    b->id = temp;
+
+    temp = a->weight;
+    a->weight = b->weight;
+    b->weight = temp;
+
+    temp = a->time;
+    a->time = b->time;
+    b->time = temp;
+}
+
+void queueBubbleSort(Queue *queue) {
+    if (queue->size >= 2) {
+        int swapped;
+        QueueElement *ptr1;
+        QueueElement *lptr = NULL;
+        do {
+            swapped = 0;
+            ptr1 = queue->head;
+
+            while (ptr1->next != lptr) {
+                if (ptr1->time > ptr1->next->time || ptr1->id > ptr1->next->id) {
+                    swap(ptr1, ptr1->next);
+                    swapped = 1;
+                }
+                ptr1 = ptr1->next;
+            }
+            lptr = ptr1;
+        } while (swapped);
+
+//        while (leftElement->next != NULL) {
+//            leftElement = leftElement->next;
+//        }
+    }
+}
 
 int main(int argc, char **argv) {
     srand(time(NULL));
@@ -86,14 +124,15 @@ int main(int argc, char **argv) {
     Queue *queue = createQueue(element);
 
     for (int i = 2; i <= 10; i++) {
-        QueueElement *secondElement = createRequest(i, rand()%50, rand()%70+50);
+        QueueElement *secondElement = createRequest(i, rand() % 50, rand() % 70 + 50);
         enqueue(queue, secondElement);
     }
 
 
     printf("Queue size: %d\n", queue->size);
     printQueue(queue);
-
+    queueBubbleSort(queue);
+    printQueue(queue);
 
     // MPI_Init( &argc, &argv );
 
