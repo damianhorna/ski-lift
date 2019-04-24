@@ -76,20 +76,22 @@ void swap(QueueElement *a, QueueElement *b) {
 void queueBubbleSort(Queue *queue) {
     if (queue->size >= 2) {
         int swapped;
-        QueueElement *ptr1;
-        QueueElement *lptr = NULL;
+        QueueElement *currentElement;
+        QueueElement *lastElementToSort = NULL;
         do {
             swapped = 0;
-            ptr1 = queue->head;
+            currentElement = queue->head;
 
-            while (ptr1->next != lptr) {
-                if (ptr1->time > ptr1->next->time || (ptr1->time == ptr1->next->time && ptr1->id > ptr1->next->id)) {
-                    swap(ptr1, ptr1->next);
+            while (currentElement->next != lastElementToSort) {
+                if ((currentElement->time > currentElement->next->time) ||
+                    ((currentElement->time == currentElement->next->time) &&
+                     (currentElement->id > currentElement->next->id))) {
+                    swap(currentElement, currentElement->next);
                     swapped = 1;
                 }
-                ptr1 = ptr1->next;
+                currentElement = currentElement->next;
             }
-            lptr = ptr1;
+            lastElementToSort = currentElement;
         } while (swapped);
     }
 }
