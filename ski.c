@@ -58,6 +58,23 @@ struct QueueElement* dequeue(Queue* queue)
 	return item; 
 }
 
+QueueElement* createRequest(int id, int time, int weight){
+	QueueElement *element = (QueueElement*) malloc(sizeof(QueueElement));
+	element->id = id;
+	element->time= time;
+	element->weight = weight;
+	return element;
+}
+
+void printQueue(Queue* queue){
+	if(!isEmpty(queue)){
+
+		printf("not empty\n");
+	} else {
+		printf("queue empty!\n");
+	}
+}
+
 
 int main( int argc, char **argv )
 {
@@ -66,11 +83,11 @@ int main( int argc, char **argv )
 	int rank, size;
 	// char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int namelen;
-	QueueElement *element = (QueueElement*) malloc(sizeof(QueueElement));
+	QueueElement *element = createRequest(1,2,3);
 	Queue* queue = createQueue(element);
 	printf("after create%d\n", isEmpty(queue));
 
-	QueueElement *element2 = (QueueElement*) malloc(sizeof(QueueElement));
+	QueueElement *element2 = createRequest(1,2,3);
 	enqueue(queue, element2);
 	printf("size: %d\n", queue->size);
 	dequeue(queue);
@@ -79,9 +96,11 @@ int main( int argc, char **argv )
 	dequeue(queue);
 	printf("size: %d\n", queue->size);
 
-	QueueElement *element3 = (QueueElement*) malloc(sizeof(QueueElement));
+	QueueElement *element3 = createRequest(1,2,3);
 	enqueue(queue, element3);
 	printf("size: %d\n", queue->size);
+
+	printQueue(queue);
 
 
 	// MPI_Init( &argc, &argv );
