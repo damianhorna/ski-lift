@@ -5,6 +5,36 @@
 #include <time.h>
 #include "queue.h"
 
+
+void* mainThread(void* arg)
+{
+
+//while true
+        //send request to other processes
+        //enqueue my request
+	//sort the queue
+	//check if other processes received the message (did I receive ack?)
+	//check capacity
+	//enter the lift or go to sleep and wait for signal
+
+       
+      	//if I can enter the lift then I do it
+	//for the random number of seconds
+	//after that time I send release to others
+        //then i remove my request from the queue and go down the hill
+	return NULL
+}
+
+void* receivingThread(void* arg)
+{
+//while true
+    	//receive message
+	// if msg req -> enqueue and sort, then send ack
+        // if msg ack -> and all acks received and weights checked -> signal
+        // if msg release -> and all akcs received and weights checked -> signal
+	return NULL;
+}
+
 int main(int argc, char **argv) {
     srand(time(NULL));
     printf("main\n");
