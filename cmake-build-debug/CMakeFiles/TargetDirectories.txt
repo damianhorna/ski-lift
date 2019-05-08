@@ -1,0 +1,3 @@
+C:/private/studies/sem6/proz/ski-lift/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/private/studies/sem6/proz/ski-lift/cmake-build-debug/CMakeFiles/ski-lift.dir
+C:/private/studies/sem6/proz/ski-lift/cmake-build-debug/CMakeFiles/rebuild_cache.dir
