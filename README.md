@@ -1,7 +1,7 @@
 ### Run:
 ```bash
 mpic++ main.cpp QueueElement.cpp QueueElement.h ThreadState.cpp ThreadState.h easylogging++.h -lpthread -o ski.out
-./ski.out
+mpirun -n 4 ski.out
 ```
 
 ### Logger:

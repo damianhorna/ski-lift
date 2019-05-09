@@ -261,14 +261,10 @@ void *mainThread(void *arg) {
 
         //  usun swoje zadanie z kolejki
         int idToRemove = threadState.getRank();
-        auto vec = threadState.getQueue();
-        vec.erase(
-                remove_if(threadState.getQueue().begin(), threadState.getQueue().end(),
-                          [&idToRemove](QueueElement &queue_element) {
+        threadState.getQueue().erase(remove_if(threadState.getQueue().begin(), threadState.getQueue().end(),[&idToRemove](QueueElement &queue_element) {
                               return queue_element.getId() == idToRemove;
                           }),
                 threadState.getQueue().end());
-        threadState.setQueue(vec);
         sort(threadState.getQueue().begin(), threadState.getQueue().end());
         pthread_mutex_unlock(&mutexClock);
 
@@ -306,19 +302,12 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     threadState.setRank(rank);
     threadState.setSize(size);
+    threadState.initTabAcks();
     vector<QueueElement> queue;
     threadState.setQueue(queue);
     srand(rank);
     threadState.setMyWeight(70 + (30 - (rand() % 60)));
-    int i;
-    for (i = 0; i < threadState.getSize(); i++) {
-        auto vec = threadState.getTabAcks();
-        vec[i] = 0;
-        threadState.setTabAcks(vec);
-    }
-    auto vec2 = threadState.getTabAcks();
-    vec2[threadState.getRank()] = 1; // set ack from yourself to 1
-    threadState.setTabAcks(vec2);
+    threadState.getTabAcks()[threadState.getRank()] = 1; // set ack from yourself to 1
 
     printf("Wątek %d zainicjował zmienne (waga = %d) i rozpocząl działnie.\n", threadState.getRank(),
            threadState.getMyWeight());

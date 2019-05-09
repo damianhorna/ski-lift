@@ -32,6 +32,8 @@ public:
 
     void setTabAcks(vector<int> &tabAcks);
 
+    void initTabAcks();
+
 private:
     int rank;
     int size;

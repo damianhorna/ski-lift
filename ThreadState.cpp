@@ -44,3 +44,10 @@ vector<int> &ThreadState::getTabAcks() {
 void ThreadState::setTabAcks(vector<int> &tabAcks) {
     ThreadState::tabAcks = tabAcks;
 }
+
+void ThreadState::initTabAcks() {
+    for(int i=0; i<size;i++){
+        tabAcks.push_back(0);
+    }
+
+}
