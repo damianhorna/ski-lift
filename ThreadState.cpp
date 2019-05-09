@@ -1,10 +1,6 @@
-//
-// Created by apilia on 5/8/2019.
-//
-
 #include "ThreadState.h"
 
-int ThreadState::getRank() const {
+int ThreadState::getRank() {
     return rank;
 }
 
@@ -12,7 +8,7 @@ void ThreadState::setRank(int rank) {
     ThreadState::rank = rank;
 }
 
-int ThreadState::getSize() const {
+int ThreadState::getSize() {
     return size;
 }
 
@@ -20,7 +16,7 @@ void ThreadState::setSize(int size) {
     ThreadState::size = size;
 }
 
-int ThreadState::getMyWeight() const {
+int ThreadState::getMyWeight() {
     return myWeight;
 }
 
@@ -32,11 +28,11 @@ vector<QueueElement> &ThreadState::getQueue() {
     return queue;
 }
 
-void ThreadState::setQueue(const vector<QueueElement> &queue) {
+void ThreadState::setQueue(vector<QueueElement> &queue) {
     ThreadState::queue = queue;
 }
 
-ThreadState::ThreadState(int rank, int size, int myWeight, vector<int> tabAcks, const vector<QueueElement> &queue) : rank(
+ThreadState::ThreadState(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue) : rank(
         rank), size(size), myWeight(myWeight), tabAcks(tabAcks), queue(queue) {}
 
 ThreadState::ThreadState() {}
@@ -45,6 +41,6 @@ vector<int> &ThreadState::getTabAcks() {
     return tabAcks;
 }
 
-void ThreadState::setTabAcks(const vector<int> &tabAcks) {
+void ThreadState::setTabAcks(vector<int> &tabAcks) {
     ThreadState::tabAcks = tabAcks;
 }

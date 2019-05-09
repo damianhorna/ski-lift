@@ -1,10 +1,6 @@
-//
-// Created by apilia on 5/8/2019.
-//
-
 #include "QueueElement.h"
 
-int QueueElement::getId() const {
+int QueueElement::getId() {
     return id;
 }
 
@@ -12,7 +8,7 @@ void QueueElement::setId(int id) {
     QueueElement::id = id;
 }
 
-int QueueElement::getTime() const {
+int QueueElement::getTime() {
     return time;
 }
 
@@ -20,7 +16,7 @@ void QueueElement::setTime(int time) {
     QueueElement::time = time;
 }
 
-int QueueElement::getWeight() const {
+int QueueElement::getWeight() {
     return weight;
 }
 
@@ -28,7 +24,7 @@ void QueueElement::setWeight(int weight) {
     QueueElement::weight = weight;
 }
 
-bool QueueElement::operator<(const QueueElement &rhs) const {
+bool QueueElement::operator<(QueueElement &rhs) {
     if (time == rhs.time) {
         return id < rhs.id;
     } else {

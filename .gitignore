@@ -1,3 +1,4 @@
-a.out
+*.out
 ski
 .idea
+cmake-build-debug
