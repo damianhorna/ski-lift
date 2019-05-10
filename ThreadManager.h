@@ -4,6 +4,8 @@
 
 #include "ThreadManagerBase.h"
 
+#include <mpi.h>
+
 class ThreadManager : public ThreadManagerBase {
 public:
     ThreadManager(int rank, int size);

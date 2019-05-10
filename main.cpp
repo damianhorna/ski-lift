@@ -9,6 +9,7 @@
 #include "easylogging++.h"
 #include "ThreadManagerBase.h"
 #include "ThreadManager.h"
+#include "Logger.h"
 
 _INITIALIZE_EASYLOGGINGPP
 using namespace std;
@@ -115,6 +116,7 @@ void *mainThread(ThreadManagerBase &threadManager) {
 
 
 int main(int argc, char **argv) {
+    Logger::Example();
     //TODO fix random values
     srand(time(nullptr));
     int rank = 0, size = 10, test = 0;

@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <mpi.h>
 #include "ThreadManager.h"
 #include "easylogging++.h"
 
@@ -101,3 +100,5 @@ void ThreadManager::processReleaseMessage(int receivedMessage[], MPI_Status rece
     }
     this->unlock();
 }
+
+ThreadManager::ThreadManager(int rank, int size) : ThreadManagerBase(rank, size) {}
