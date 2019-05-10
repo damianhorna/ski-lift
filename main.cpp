@@ -1,324 +1,243 @@
 #include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 #include <pthread.h>
-#include <unistd.h>
 #include <time.h>
-#include "easylogging++.h"
-#include "ThreadState.h"
-
-#define MSG_SIZE 2
-#define MSG_HELLO 100
-#define TAG_REQ 123
-#define TAG_ACK 456
-#define TAG_RELEASE 789
-#define Capacity 150
-#define GOUPTIME 5
-
 #include <algorithm>
 #include <vector>
+#include <numeric>
+#include <zconf.h>
 
-int clockLamport = 0;
-int stop = 0;
+#include "easylogging++.h"
+#include "ThreadManager.h"
+#include "MessageType.h"
 
 pthread_mutex_t mutexClock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-using namespace std;
 _INITIALIZE_EASYLOGGINGPP
+using namespace std;
 
-ThreadState threadState;
+//
+//void print(ThreadManager &threadState) {
+//    printf("[Watek %d; zegar %d] KOLEJKA: ", threadState.getRank(), clock);
+//    for (QueueElement &elem : threadState.getQueue()) {
+//        printf("id: %d time: %d weight: %d; \t", elem.getId(), elem.getTime(), elem.getWeight());
+//    }
+//    printf("KONIEC KOLEJKI\n");
+//}
+//
+//int checkWeights(ThreadManager &threadState) {
+//    int sum = 0;
+//    for (QueueElement &elem : threadState.getQueue()) {
+//        if (elem.getId() == threadState.getRank()) {
+//            break;
+//        }
+//        sum += elem.getWeight();
+//    }
+//    return sum;
+//}
+//
+//void *receivingThread(void *arg) {
+//
+//    while (!stop) {
+//        MPI_Status receivedMessage;
+//        int msg[MSG_SIZE], receivedClock, receivedWeight;
+//
+//        MPI_Recv(msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &receivedMessage);
+//        printf("[Wątek %d - ack] otrzymał wiadomość od  %d o TAGU: %d.  [zegar z wiadomosci = %d]\n",
+//               threadManager.getRank(),
+//               receivedMessage.MPI_SOURCE, receivedMessage.MPI_TAG, receivedClock);
+//
+//        receivedClock = msg[0];
+//        receivedWeight = msg[1];
+//
+//        // wstaw do kolejki
+//        if (receivedMessage.MPI_TAG == REQUEST) {
+//            pthread_mutex_lock(&mutexClock);
+//
+//            clock = (clock > receivedClock) ? clock : receivedClock;
+//            clock += 1;
+//
+//            printf("[Wątek %d - ack] wstawia do kolejki zgłoszenie %d. [zegar = %d]\n", threadManager.getRank(),
+//                   receivedMessage.MPI_SOURCE,
+//                   clock);
+//            threadManager.getQueue().emplace_back(receivedMessage.MPI_SOURCE, receivedClock, receivedWeight);
+//            sort(threadManager.getQueue().begin(), threadManager.getQueue().end());
+//            print(threadManager);
+//            msg[0] = clock;
+//            msg[1] = -1;
+//            MPI_Send(msg, MSG_SIZE, MPI_INT, receivedMessage.MPI_SOURCE, ACK, MPI_COMM_WORLD);
+//            pthread_mutex_unlock(&mutexClock);
+//        } else if (receivedMessage.MPI_TAG == ACK) {
+//            printf("[Wątek %d - ack] ustawia w tablicy ack od  %d. [zegar = %d]\n", threadManager.getRank(),
+//                   receivedMessage.MPI_SOURCE,
+//                   clock);
+//
+//            pthread_mutex_lock(&mutexClock);
+//            threadManager.getTabAcks()[receivedMessage.MPI_SOURCE] = 1;
+//
+//            //print tabAcks
+//            int j;
+//            printf("Tab_ack: [ %d", threadManager.getTabAcks()[0]);
+//            for (j = 1; j < threadManager.getSize(); j++) {
+//                printf(", %d", threadManager.getTabAcks()[j]);
+//            }
+//            printf("]\n");
+//
+//
+//            int success = 1;
+//            int i;
+//            for (i = 0; i < threadManager.getSize(); i++) {
+//                if (threadManager.getTabAcks()[i] != 1) {
+//                    success = 0;
+//                    break;
+//                }
+//            }
+//            if ((checkWeights(threadManager) + threadManager.getMyWeight()) > CAPACITY =) {
+//
+//                success = 0;
+//            }
+//
+//            if (success) {
+//                printf("[Wątek %d - ack] ACK probuje wybudzić wątek :D [zegar = %d]\n", threadManager.getRank(),
+//                       clock);
+//
+//                pthread_cond_signal(&cond); // Should wake up *one* thread
+//            }
+//            pthread_mutex_unlock(&mutexClock);
+//        } else if (receivedMessage.MPI_TAG == REALEASE) {
+//            pthread_mutex_lock(&mutexClock);
+//            printf("[Wątek %d - ack] usuwa z kolejki zgłoszenie %d.[zegar = %d]\n", threadManager.getRank(),
+//                   receivedMessage.MPI_SOURCE,
+//                   clock);
+//
+//            int idToRemove = receivedMessage.MPI_SOURCE;
+//            threadManager.getQueue().erase(
+//                    remove_if(threadManager.getQueue().begin(), threadManager.getQueue().end(),
+//                              [&idToRemove](QueueElement &queue_element) {
+//                                  return queue_element.getId() == idToRemove;
+//                              }),
+//                    threadManager.getQueue().end());
+//            sort(threadManager.getQueue().begin(), threadManager.getQueue().end());
+//            //print(threadManager);
+//            int success = 1;
+//            int i;
+//            for (i = 0; i < threadManager.getSize(); i++) {
+//                if (threadManager.getTabAcks()[i] != 1) {
+//                    success = 0;
+//                    break;
+//                }
+//            }
+//
+//            printf("[Wątek %d - ack] Suma wag: %d .[zegar = %d]\n", threadManager.getRank(), checkWeights(threadManager),
+//                   clock);
+//
+//            if ((checkWeights(threadManager) + threadManager.getMyWeight()) > CAPACITY =) {
+//                success = 0;
+//            }
+//
+//            if (success) {
+//                printf("[Wątek %d - ack] RELEASE probuje wybudzić wątek :D [zegar = %d]\n", threadManager.getRank(),
+//                       clock);
+//
+//                pthread_cond_signal(&cond); // Should wake up *one* thread
+//            }
+//            pthread_mutex_unlock(&mutexClock); // Zmiana- unlock po signal
+//        }
+//    }
+//    return NULL;
+//}
+//
+void *mainThread(ThreadManager threadManager) {
 
-// wyswietl zawartosc kolejki
-void print(ThreadState &threadState) {
-    printf("[Watek %d; zegar %d] KOLEJKA: ", threadState.getRank(), clockLamport);
-    for (QueueElement &elem : threadState.getQueue()) {
-        printf("id: %d time: %d weight: %d; \t", elem.getId(), elem.getTime(), elem.getWeight());
-    }
-    printf("KONIEC KOLEJKI\n");
-}
-
-int checkWeights(ThreadState &threadState) {
-    int sum = 0;
-    for (QueueElement &elem : threadState.getQueue()) {
-        if (elem.getId() == threadState.getRank()) {
-            break;
-        }
-        sum += elem.getWeight();
-    }
-    return sum;
-}
-
-void *receivingThread(void *arg) {
-
-    while (!stop) {
-        MPI_Status status;
-        int msg[MSG_SIZE], receivedClock, receivedWeight;
-
-        MPI_Recv(msg, MSG_SIZE, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        printf("[Wątek %d - ack] otrzymał wiadomość od  %d o TAGU: %d.  [zegar z wiadomosci = %d]\n",
-               threadState.getRank(),
-               status.MPI_SOURCE, status.MPI_TAG, receivedClock);
-
-        receivedClock = msg[0];
-        receivedWeight = msg[1];
-
-        // wstaw do kolejki
-        if (status.MPI_TAG == TAG_REQ) {
-            pthread_mutex_lock(&mutexClock);
-
-            clockLamport = (clockLamport > receivedClock) ? clockLamport : receivedClock;
-            clockLamport += 1;
-
-            printf("[Wątek %d - ack] wstawia do kolejki zgłoszenie %d. [zegar = %d]\n", threadState.getRank(),
-                   status.MPI_SOURCE,
-                   clockLamport);
-            threadState.getQueue().push_back(QueueElement(status.MPI_SOURCE, receivedClock, receivedWeight));
-            sort(threadState.getQueue().begin(), threadState.getQueue().end());
-            print(threadState);
-            msg[0] = clockLamport;
-            msg[1] = -1;
-            MPI_Send(msg, MSG_SIZE, MPI_INT, status.MPI_SOURCE, TAG_ACK, MPI_COMM_WORLD);
-            pthread_mutex_unlock(&mutexClock);
-        } else if (status.MPI_TAG == TAG_ACK) {
-            printf("[Wątek %d - ack] ustawia w tablicy ack od  %d. [zegar = %d]\n", threadState.getRank(),
-                   status.MPI_SOURCE,
-                   clockLamport);
-
-            pthread_mutex_lock(&mutexClock);
-            threadState.getTabAcks()[status.MPI_SOURCE] = 1;
-
-            //print tabAcks
-            int j;
-            printf("Tab_ack: [ %d", threadState.getTabAcks()[0]);
-            for (j = 1; j < threadState.getSize(); j++) {
-                printf(", %d", threadState.getTabAcks()[j]);
-            }
-            printf("]\n");
+    while (true) {
+        threadManager.increaseClock();
+        int *msg = threadManager.constructMessage();
+        threadManager.sendMessageForEverybody(msg, REQUEST);
+        threadManager.addOwnRequestToQueue();
 
 
-            int success = 1;
-            int i;
-            for (i = 0; i < threadState.getSize(); i++) {
-                if (threadState.getTabAcks()[i] != 1) {
-                    success = 0;
-                    break;
-                }
-            }
-            if ((checkWeights(threadState) + threadState.getMyWeight()) > Capacity) {
-
-                success = 0;
-            }
-
-            if (success) {
-                printf("[Wątek %d - ack] ACK probuje wybudzić wątek :D [zegar = %d]\n", threadState.getRank(),
-                       clockLamport);
-
-                pthread_cond_signal(&cond); // Should wake up *one* thread
-            }
-            pthread_mutex_unlock(&mutexClock);
-        } else if (status.MPI_TAG == TAG_RELEASE) {
-            pthread_mutex_lock(&mutexClock);
-            printf("[Wątek %d - ack] usuwa z kolejki zgłoszenie %d.[zegar = %d]\n", threadState.getRank(),
-                   status.MPI_SOURCE,
-                   clockLamport);
-
-            int idToRemove = status.MPI_SOURCE;
-            threadState.getQueue().erase(
-                    remove_if(threadState.getQueue().begin(), threadState.getQueue().end(),
-                              [&idToRemove](QueueElement &queue_element) {
-                                  return queue_element.getId() == idToRemove;
-                              }),
-                    threadState.getQueue().end());
-            sort(threadState.getQueue().begin(), threadState.getQueue().end());
-            //print(threadState);
-            int success = 1;
-            int i;
-            for (i = 0; i < threadState.getSize(); i++) {
-                if (threadState.getTabAcks()[i] != 1) {
-                    success = 0;
-                    break;
-                }
-            }
-
-            printf("[Wątek %d - ack] Suma wag: %d .[zegar = %d]\n", threadState.getRank(), checkWeights(threadState),
-                   clockLamport);
-
-            if ((checkWeights(threadState) + threadState.getMyWeight()) > Capacity) {
-                success = 0;
-            }
-
-            if (success) {
-                printf("[Wątek %d - ack] RELEASE probuje wybudzić wątek :D [zegar = %d]\n", threadState.getRank(),
-                       clockLamport);
-
-                pthread_cond_signal(&cond); // Should wake up *one* thread
-            }
-            pthread_mutex_unlock(&mutexClock); // Zmiana- unlock po signal
-        }
-    }
-    return NULL;
-}
-
-void *mainThread(void *arg) {
-
-    while (!stop) {
-        int msg[MSG_SIZE];
-
-        int i;
-        int receivedClock, receivedStatus;
-        // semafor P
         pthread_mutex_lock(&mutexClock);
-        clockLamport += 1;
-        msg[0] = clockLamport;
-        msg[1] = threadState.getMyWeight();
-        printf("[Wątek %d - main] wysłała do wszystkich request. [zegar = %d]\n", threadState.getRank(), clockLamport);
-
-        for (i = 0; i < threadState.getSize(); i++) {
-            if (i != threadState.getRank()) // do not send to yourself
-            {
-                MPI_Send(msg, MSG_SIZE, MPI_INT, i, TAG_REQ, MPI_COMM_WORLD);
-
-            }
-        }
-        // semafor V
-        //wstaw do kolejki wlasne zadanie
-        QueueElement newEelement = QueueElement(threadState.getRank(), clockLamport, threadState.getMyWeight());
-        vector<QueueElement> queue = threadState.getQueue();
-        queue.push_back(newEelement);
-        threadState.setQueue(queue);
-        sort(threadState.getQueue().begin(), threadState.getQueue().end());
-
-        printf("[Wątek %d - main] wstawił do swojej kolejki swój request. [zegar = %d]\n", threadState.getRank(),
-               clockLamport);
-
-        //sprawdz warunek bazujacy na kolejce (suma wag) i czy od wszystkich ack
-        printf("[Wątek %d - main] sprawdza czy wszytskie wątki odebrały wiadomości. [zegar = %d]\n",
-               threadState.getRank(),
-               clockLamport);
-        do {
-            int success = 1;
-            int i;
-            for (i = 0; i < threadState.getSize(); i++) {
-                if (threadState.getTabAcks()[i] != 1) {
-                    success = 0;
-                    break;
-                }
-            }
-            if ((checkWeights(threadState) + threadState.getMyWeight()) > Capacity) {
-                success = 0;
-            }
-
-            if (success) {
-                break;
+        bool canGoOnLift = false;
+        while (!canGoOnLift) {
+            if (threadManager.isEnoughPlaceOnLift() && threadManager.isEveryAck()) {
+                canGoOnLift = true;
             } else {
-                printf("[Wątek %d - main] zasypiam sobie... zzz... [zegar = %d]\n", threadState.getRank(),
-                       clockLamport);
-
+                // TODO Remove this log
+                printf("[Wątek %d - main] zasypiam sobie... zzz... [zegar = %d]\n", threadManager.getRank(),
+                       threadManager.getClock());
                 pthread_cond_wait(&cond, &mutexClock);
             }
-
-
-        } while (1);
-        // mutex unlock
-        pthread_mutex_unlock(&mutexClock);
-
-        printf("[Wątek %d - main] wszytskie wątki odebrały moją wiadomość wiadomości. [zegar = %d] Pozdrawiam, watek %d\n",
-               threadState.getRank(), clockLamport, threadState.getRank());
-
-        printf("[Wątek %d - main] wyzerowuje tablice ack i wejeżdza do góry. SEKCJA KRYTYCZNA [zegar = %d]\n",
-               threadState.getRank(), clockLamport);
-        // wyzerowanie ACK- mutex niepotrzebny, bo póki nie wyślę nowego REQUESTA, to nikt nie odpowie ACK
-        for (i = 0; i < threadState.getSize(); i++) {
-            auto vec = threadState.getTabAcks();
-            vec[i] = 0;
-            threadState.setTabAcks(vec);
         }
-        threadState.getTabAcks()[threadState.getRank()] = 1; //set ack to 1 from yourself
-        // GO!
-        printf("\n[Wątek %d - main] wjeżdzam do góry przez %d sekund [zegar = %d]\n\n", threadState.getRank(), GOUPTIME,
-               clockLamport);
-        sleep(GOUPTIME);
+        pthread_mutex_unlock(&mutexClock);
+        threadManager.clearAcks();
+
+        //TODO Remove this log
+        printf("[Wątek %d - main] wszytskie wątki odebrały moją wiadomość wiadomości. [zegar = %d] Pozdrawiam, watek %d\n",
+               threadManager.getRank(), threadManager.getClock(), threadManager.getRank());
+        printf("[Wątek %d - main] wyzerowuje tablice ack i wejeżdza do góry. SEKCJA KRYTYCZNA [zegar = %d]\n",
+               threadManager.getRank(), threadManager.getClock());
+        printf("\n[Wątek %d - main] wjeżdzam do góry przez %d sekund [zegar = %d]\n\n", threadManager.getRank(), 5,
+               threadManager.getClock());
+
+        sleep(5);
+        threadManager.increaseClock();
+        msg = threadManager.constructMessage();
+
+
+        //TODO Remove this log
+        printf("\n[Wątek %d - main] KONIEC SEKCJI KRYTYCZNEJ [zegar = %d]\n\n", threadManager.getRank(),
+               threadManager.getClock());
+
+        pthread_mutex_lock(&mutexClock);
+
 
         // send RELEASE
-        pthread_mutex_lock(&mutexClock);
-        msg[0] = clockLamport;
-        printf("\n[Wątek %d - main] KONIEC SEKCJI KRYTYCZNEJ [zegar = %d]\n\n", threadState.getRank(), clockLamport);
+        threadManager.sendMessageForEverybody(msg, REALEASE);
 
-        for (i = 0; i < threadState.getSize(); i++) {
-            if (i != threadState.getRank()) // do not send to yourself
-            {
-                MPI_Send(msg, MSG_SIZE, MPI_INT, i, TAG_RELEASE, MPI_COMM_WORLD);
-            }
-        }
+        //TODO Remove this log
         printf("[Wątek %d - main] wysyłał release synał do wszystkich i zjeżdża na dół. [zegar = %d]\n",
-               threadState.getRank(),
-               clockLamport);
-
-        // sleep random przy zjeździe
-        printf("[Wątek %d - main] usuwa swoje zgłoszenie ze swojej kolejki. [zegar = %d]\n", threadState.getRank(),
-               clockLamport);
+               threadManager.getRank(), threadManager.getClock());
+        printf("[Wątek %d - main] usuwa swoje zgłoszenie ze swojej kolejki. [zegar = %d]\n", threadManager.getRank(),
+               threadManager.getClock());
 
         //  usun swoje zadanie z kolejki
-        int idToRemove = threadState.getRank();
-        threadState.getQueue().erase(remove_if(threadState.getQueue().begin(), threadState.getQueue().end(),[&idToRemove](QueueElement &queue_element) {
-                              return queue_element.getId() == idToRemove;
-                          }),
-                threadState.getQueue().end());
-        sort(threadState.getQueue().begin(), threadState.getQueue().end());
+        threadManager.removeYourselfFromQueue();
         pthread_mutex_unlock(&mutexClock);
 
-        int randomTime = 8 - (rand() % 7);
-        printf("[Wątek %d - main] zjedża z góry przez %d sekund................ [zegar = %d]\n", threadState.getRank(),
-               randomTime,
-               clockLamport);
-        sleep(randomTime); // czy to jest potzrebne?
-        printf("[Wątek %d - main] zjechał i znowy  ustawia się do kolejki narciarzy. [zegar = %d]\n",
-               threadState.getSize(),
-               clockLamport);
+        int randomTime = 1 + rand() % 5;
 
+        //TODO Remove this log
+        printf("[Wątek %d - main] zjedża z góry przez %d sekund................ [zegar = %d]\n",threadManager.getRank(),randomTime,threadManager.getClock());
+        sleep(randomTime); // czy to jest potzrebne?
+        printf("[Wątek %d - main] zjechał i znowy  ustawia się do kolejki narciarzy. [zegar = %d]\n",threadManager.getSize(),threadManager.getClock());
     }
-    return NULL;
 }
 
 
 int main(int argc, char **argv) {
-    LINFO << "This is my first log";
-    LOG(INFO) << "This is my second log";
-    srand(time(NULL));
-    int rank, size;
-
-    int provided = 0;
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    if (provided < MPI_THREAD_MULTIPLE) {
-        printf("ERROR: The MPI library does not have full thread support\n");
-
-    } else {
-        printf("Full support for multiple threads!\n");
-    }
-
-
+    srand(time(nullptr));
+    int rank = 0, size = 10;
+    int elo;
+//
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &elo);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    threadState.setRank(rank);
-    threadState.setSize(size);
-    threadState.initTabAcks();
-    vector<QueueElement> queue;
-    threadState.setQueue(queue);
-    srand(rank);
-    threadState.setMyWeight(70 + (30 - (rand() % 60)));
-    threadState.getTabAcks()[threadState.getRank()] = 1; // set ack from yourself to 1
 
-    printf("Wątek %d zainicjował zmienne (waga = %d) i rozpocząl działnie.\n", threadState.getRank(),
-           threadState.getMyWeight());
+    ThreadManager threadManager(rank, size);
+//
     pthread_t receiveMessageThread, skiLiftThread;
-    pthread_create(&receiveMessageThread, nullptr, receivingThread, &threadState);
-    pthread_create(&skiLiftThread, nullptr, mainThread, &threadState);
-    pthread_join(receiveMessageThread, nullptr);
+//    pthread_create(&receiveMessageThread, nullptr, receivingThread, &threadManager);
+    pthread_create(&skiLiftThread, nullptr, reinterpret_cast<void *(*)(void *)>(mainThread), &threadManager);
+//
+//    pthread_join(receiveMessageThread, nullptr);
     pthread_join(skiLiftThread, nullptr);
-    pthread_mutex_destroy(&mutexClock);
-    pthread_cond_destroy(&cond);
-    MPI_Finalize();
-    printf("Koniec programu");
+//
+//    pthread_mutex_destroy(&mutexClock);
+//    pthread_cond_destroy(&cond);
+//    MPI_Finalize();
+//    printf("Koniec programu");
     return 0;
 }
+
+#pragma clang diagnostic pop

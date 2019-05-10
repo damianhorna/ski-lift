@@ -7,5 +7,5 @@ include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 SET(CMAKE_C_COMPILER mpicc)
 SET(CMAKE_CXX_COMPILER mpicxx)
 
-add_executable(ski-lift main.cpp QueueElement.cpp QueueElement.h ThreadState.cpp ThreadState.h easylogging++.h)
+add_executable(ski-lift main.cpp QueueElement.cpp QueueElement.h ThreadManager.cpp ThreadManager.h easylogging++.h MessageType.h)
 target_link_libraries(ski-lift ${MPI_C_LIBRARIES} -lpthread)
