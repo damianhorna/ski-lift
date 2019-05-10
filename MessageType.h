@@ -2,5 +2,5 @@
 #define SKI_LIFT_MESSAGETYPE_H
 enum MessageType {
     REQUEST, ACK, REALEASE
-} messageType;
+};
 #endif //SKI_LIFT_MESSAGETYPE_H

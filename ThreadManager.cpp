@@ -56,7 +56,6 @@ void ThreadManager::setTabAcks(vector<int> &tabAcks) {
 
 void ThreadManager::initTabAcks() {
     for (int i = 0; i < size; i++) {
-        cout << i << endl;
         tabAcks.push_back(0);
     }
 }
@@ -74,8 +73,8 @@ void ThreadManager::increaseClock() {
     this->clock += 1;
 }
 
-int *ThreadManager::constructMessage() {
-    int message[this->MSG_SIZE];
+int* ThreadManager::constructMessage() {
+    static int message[ThreadManager::MSG_SIZE];
     message[0] = this->clock;
     message[1] = this->myWeight;
     return message;
@@ -90,8 +89,8 @@ void ThreadManager::sendMessageForEverybody(int *msg, MessageType type) {
     for (int i = 0; i < this->size; i++) {
         if (i == rank) continue;
         MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
-
     }
+    LOG(INFO) << "Request was sent";
 }
 
 void ThreadManager::addOwnRequestToQueue() {
@@ -109,8 +108,16 @@ void ThreadManager::sortQueue() {
     sort(this->queue.begin(), this->queue.end());
 }
 
+int ThreadManager::getSumOfWeights() {
+    return accumulate(this->queue.begin(), this->queue.end(), 0,
+                      [](int acc, const QueueElement &queueElement) {
+                          return queueElement.getWeight() + acc;
+                      }
+    );
+}
+
 bool ThreadManager::isEveryAck() {
-    return accumulate(this->queue.begin(), this->queue.end(), 0) == this->size;
+    return this->getSumOfWeights() == this->size;
 }
 
 bool ThreadManager::isEnoughPlaceOnLift() {
@@ -130,15 +137,17 @@ void ThreadManager::clearAcks() {
 }
 
 void ThreadManager::removeYourselfFromQueue() {
+    int rank = this->rank;
     queue.erase(
-            remove_if(queue.begin(), queue.end(), &ThreadManager::IsMyRank),
+            remove_if(queue.begin(), queue.end(),
+                      [rank](const QueueElement &o) { return o.getId() == rank; }),
             queue.end()
     );
     this->sortQueue();
 
 }
 
-bool ThreadManager::IsMyRank(QueueElement o) {
+bool ThreadManager::IsMyRank(const QueueElement &o) {
     return o.getId() == this->rank;
 
 }

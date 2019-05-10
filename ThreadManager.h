@@ -7,7 +7,7 @@
 
 using namespace std;
 
-//TODO Clean here xDDD
+//TODO Clean here xDDD and change functions to private
 class ThreadManager {
 private:
     int rank;
@@ -16,7 +16,7 @@ private:
     int clock;
     vector<int> tabAcks;
     vector<QueueElement> queue;
-    bool IsMyRank(QueueElement o);
+    bool IsMyRank(const QueueElement &o);
 
 public:
     ThreadManager(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue);
@@ -55,11 +55,11 @@ public:
 
     void updateClock(int receivedClock);
 
-    int *constructMessage();
+    int* constructMessage();
 
     int getClock() const;
 
-    void sendMessageForEverybody(int *msg, MessageType type);
+    void sendMessageForEverybody(int* msg, MessageType type);
 
     void addOwnRequestToQueue();
 
@@ -74,6 +74,8 @@ public:
     void clearAcks();
 
     void removeYourselfFromQueue();
+
+    int getSumOfWeights();
 };
 
 
