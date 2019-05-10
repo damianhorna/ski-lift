@@ -1,6 +1,6 @@
 #include "QueueElement.h"
 
-int QueueElement::getId() {
+int QueueElement::getId() const {
     return id;
 }
 
@@ -16,7 +16,7 @@ void QueueElement::setTime(int time) {
     QueueElement::time = time;
 }
 
-int QueueElement::getWeight() {
+int QueueElement::getWeight() const {
     return weight;
 }
 

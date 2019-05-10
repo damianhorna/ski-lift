@@ -7,7 +7,7 @@ public:
 
     QueueElement(int e_id, int e_time, int e_weight) : id(e_id), time(e_time), weight(e_weight) {}
 
-    int getId();
+    int getId() const;
 
     void setId(int id);
 
@@ -15,7 +15,7 @@ public:
 
     void setTime(int time);
 
-    int getWeight();
+    int getWeight() const;
 
     void setWeight(int weight);
 
