@@ -78,7 +78,8 @@ void *receivingThread(ThreadManager &threadManager) {
                 printf(", %d", threadManager.getTabAcks()[j]);
             }
             printf("]\n");
-
+            cout << "Powinienem budzic!? " << threadManager.getRank() << endl;
+            cout << threadManager.isEveryAck() << " " << threadManager.isEnoughPlaceOnLift() << endl;
             if (threadManager.isEveryAck() && threadManager.isEnoughPlaceOnLift()) {
                 printf("[Wątek %d - ack] ACK probuje wybudzić wątek :D [zegar = %d]\n", threadManager.getRank(),
                        threadManager.getClock());
@@ -86,6 +87,7 @@ void *receivingThread(ThreadManager &threadManager) {
                 pthread_cond_signal(&cond); // Should wake up *one* thread
             }
             pthread_mutex_unlock(&mutexClock);
+            cout << "Po funkcji " << threadManager.getRank() << endl;
 
         } else if (receivedMessageStatus.MPI_TAG == REALEASE) {
             pthread_mutex_lock(&mutexClock);
@@ -139,6 +141,7 @@ void *mainThread(ThreadManager &threadManager) {
         bool canGoOnLift = false;
         while (!canGoOnLift) {
             if (threadManager.isEnoughPlaceOnLift() && threadManager.isEveryAck()) {
+                LOG(INFO) << "Thread " << threadManager.getRank() << " can go on lift";
                 canGoOnLift = true;
             } else {
                 // TODO Remove this log
@@ -147,6 +150,7 @@ void *mainThread(ThreadManager &threadManager) {
                 pthread_cond_wait(&cond, &mutexClock);
             }
         }
+        cout << "WBIJAM DO KOLEJKI!";
         pthread_mutex_unlock(&mutexClock);
         threadManager.clearAcks();
 

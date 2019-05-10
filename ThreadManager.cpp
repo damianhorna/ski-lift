@@ -73,7 +73,7 @@ void ThreadManager::increaseClock() {
     this->clock += 1;
 }
 
-int* ThreadManager::constructMessage() {
+int *ThreadManager::constructMessage() {
     static int message[ThreadManager::MSG_SIZE];
     message[0] = this->clock;
     message[1] = this->myWeight;
@@ -90,7 +90,7 @@ void ThreadManager::sendMessageForEverybody(int *msg, MessageType type) {
         if (i == rank) continue;
         MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
     }
-    LOG(INFO) << "Request was sent";
+    LOG(INFO) << "Request was sent by " << this->rank;
 }
 
 void ThreadManager::addOwnRequestToQueue() {
@@ -116,8 +116,17 @@ int ThreadManager::getSumOfWeights() {
     );
 }
 
+int ThreadManager::getSumOfACks() {
+    int sum = 0;
+    for (int &ack:this->tabAcks) {
+        sum += ack;
+    }
+    return sum;
+}
+
 bool ThreadManager::isEveryAck() {
-    return this->getSumOfWeights() == this->size;
+    cout << "Size: " << this->size << " Sum weights: " << this->getSumOfACks() << endl;
+    return this->getSumOfACks() == this->size;
 }
 
 bool ThreadManager::isEnoughPlaceOnLift() {

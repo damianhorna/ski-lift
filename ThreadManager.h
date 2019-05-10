@@ -76,6 +76,8 @@ public:
     void removeYourselfFromQueue();
 
     int getSumOfWeights();
+
+    int getSumOfACks();
 };
 
 
