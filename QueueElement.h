@@ -1,7 +1,3 @@
-//
-// Created by apilia on 5/8/2019.
-//
-
 #ifndef SKI_LIFT_QUEUEELEMENT_H
 #define SKI_LIFT_QUEUEELEMENT_H
 
@@ -11,19 +7,19 @@ public:
 
     QueueElement(int e_id, int e_time, int e_weight) : id(e_id), time(e_time), weight(e_weight) {}
 
-    int getId() const;
+    int getId();
 
     void setId(int id);
 
-    int getTime() const;
+    int getTime();
 
     void setTime(int time);
 
-    int getWeight() const;
+    int getWeight();
 
     void setWeight(int weight);
 
-    bool operator<(const QueueElement &rhs) const;
+    bool operator<(QueueElement &rhs);
 
 private:
     int id;
