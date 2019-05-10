@@ -1,6 +1,6 @@
 ### Run:
 ```bash
-mpic++ main.cpp QueueElement.cpp QueueElement.h ThreadManager.cpp ThreadManager.h easylogging++.h -lpthread -o ski.out
+mpic++ main.cpp QueueElement.cpp QueueElement.h ThreadManagerBase.cpp ThreadManagerBase.h easylogging++.h MessageType.h ThreadManager.cpp ThreadManager.h -lpthread -o ski.out
 mpirun -n 4 ski.out
 ```
 
