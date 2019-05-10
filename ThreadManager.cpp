@@ -36,7 +36,7 @@ void ThreadManager::processRequestMessage(int receivedMessage[], MPI_Status rece
     this->unlock();
 }
 
-void ThreadManager::processAckMessage(int receivedMessage[], MPI_Status receivedMessageStatus) {
+void ThreadManager::processAckMessage(MPI_Status receivedMessageStatus) {
     printf("[Wątek %d - ack] ustawia w tablicy ack od  %d. [zegar = %d]\n", this->getRank(),
            receivedMessageStatus.MPI_SOURCE, this->getClock());
 
@@ -64,7 +64,7 @@ void ThreadManager::processAckMessage(int receivedMessage[], MPI_Status received
 
 }
 
-void ThreadManager::processReleaseMessage(int receivedMessage[], MPI_Status receivedMessageStatus) {
+void ThreadManager::processReleaseMessage(MPI_Status receivedMessageStatus) {
     this->lock();
 
     //TODO Remove this log

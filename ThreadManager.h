@@ -12,9 +12,9 @@ public:
 
     void processRequestMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
 
-    void processAckMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
+    void processAckMessage(MPI_Status receivedMessageStatus);
 
-    void processReleaseMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
+    void processReleaseMessage(MPI_Status receivedMessageStatus);
 };
 
 

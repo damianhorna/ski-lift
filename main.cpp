@@ -35,10 +35,10 @@ void *receivingThread(ThreadManager &threadManager) {
                 threadManager.processRequestMessage(receivedMessage, receivedMessageStatus);
                 break;
             case ACK:
-                threadManager.processAckMessage(receivedMessage, receivedMessageStatus);
+                threadManager.processAckMessage(receivedMessageStatus);
                 break;
             case REALEASE:
-                threadManager.processReleaseMessage(receivedMessage, receivedMessageStatus);
+                threadManager.processReleaseMessage(receivedMessageStatus);
                 break;
         }
     }
