@@ -7,7 +7,17 @@
 
 using namespace std;
 
+//TODO Clean here xDDD
 class ThreadManager {
+private:
+    int rank;
+    int size;
+    int myWeight;
+    int clock;
+    vector<int> tabAcks;
+    vector<QueueElement> queue;
+    bool IsMyRank(QueueElement o);
+
 public:
     ThreadManager(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue);
 
@@ -43,18 +53,10 @@ public:
 
     void increaseClock();
 
+    void updateClock(int receivedClock);
+
     int *constructMessage();
 
-private:
-    int rank;
-    int size;
-    int myWeight;
-    int clock;
-    vector<int> tabAcks;
-    vector<QueueElement> queue;
-    bool IsMyRank(QueueElement o);
-
-public:
     int getClock() const;
 
     void sendMessageForEverybody(int *msg, MessageType type);

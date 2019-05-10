@@ -97,11 +97,11 @@ void ThreadManager::sendMessageForEverybody(int *msg, MessageType type) {
 void ThreadManager::addOwnRequestToQueue() {
     QueueElement newElement = QueueElement(this->rank, this->clock, this->myWeight);
     this->addRequestToQueue(newElement);
-    this->sortQueue();
 }
 
 void ThreadManager::addRequestToQueue(QueueElement element) {
     this->queue.push_back(element);
+    this->sortQueue();
 }
 
 // TODO sort it correctly
@@ -141,4 +141,10 @@ void ThreadManager::removeYourselfFromQueue() {
 bool ThreadManager::IsMyRank(QueueElement o) {
     return o.getId() == this->rank;
 
+}
+
+void ThreadManager::updateClock(int receivedClock) {
+    if (receivedClock > this->clock)
+        this->clock = receivedClock;
+    this->increaseClock();
 }
