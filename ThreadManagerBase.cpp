@@ -41,7 +41,8 @@ void ThreadManagerBase::setQueue(vector<QueueElement> &queue) {
     ThreadManagerBase::queue = queue;
 }
 
-ThreadManagerBase::ThreadManagerBase(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue) : rank(
+ThreadManagerBase::ThreadManagerBase(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue)
+        : rank(
         rank), size(size), myWeight(myWeight), tabAcks(std::move(tabAcks)), queue(queue) {}
 
 ThreadManagerBase::ThreadManagerBase() {}

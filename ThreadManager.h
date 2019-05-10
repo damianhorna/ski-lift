@@ -1,7 +1,3 @@
-//
-// Created by pluto on 11.05.19.
-//
-
 #ifndef SKI_LIFT_THREADMANAGER_H
 #define SKI_LIFT_THREADMANAGER_H
 
@@ -12,6 +8,11 @@ class ThreadManager : public ThreadManagerBase {
 public:
     ThreadManager(int rank, int size);
 
+    void processRequestMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
+
+    void processAckMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
+
+    void processReleaseMessage(int receivedMessage[], MPI_Status receivedMessageStatus);
 };
 
 

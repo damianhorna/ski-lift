@@ -17,7 +17,9 @@ protected:
     int clock;
     vector<int> tabAcks;
     vector<QueueElement> queue;
+
     bool IsMyRank(const QueueElement &o);
+
     pthread_mutex_t clockMutex;
     pthread_cond_t conditionalMutex;
 
@@ -58,11 +60,11 @@ public:
 
     void updateClock(int receivedClock);
 
-    int* constructMessage();
+    int *constructMessage();
 
     int getClock() const;
 
-    void sendMessageForEverybody(int* msg, MessageType type);
+    void sendMessageForEverybody(int *msg, MessageType type);
 
     void addOwnRequestToQueue();
 
