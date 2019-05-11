@@ -1,168 +1,104 @@
-#include <utility>
-#include <string>
-#include <cstdlib>
-#include <mpi.h>
-#include <numeric>
+#include <cstdio>
 #include "ThreadManager.h"
 #include "easylogging++.h"
-#include "MessageType.h"
 
-using namespace std;
-
-int ThreadManager::getRank() {
-    return rank;
-}
-
-void ThreadManager::setRank(int rank) {
-    ThreadManager::rank = rank;
-}
-
-int ThreadManager::getSize() {
-    return size;
-}
-
-void ThreadManager::setSize(int size) {
-    ThreadManager::size = size;
-}
-
-int ThreadManager::getMyWeight() {
-    return myWeight;
-}
-
-void ThreadManager::setMyWeight(int myWeight) {
-    ThreadManager::myWeight = myWeight;
-}
-
-vector<QueueElement> &ThreadManager::getQueue() {
-    return queue;
-}
-
-void ThreadManager::setQueue(vector<QueueElement> &queue) {
-    ThreadManager::queue = queue;
-}
-
-ThreadManager::ThreadManager(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue) : rank(
-        rank), size(size), myWeight(myWeight), tabAcks(std::move(tabAcks)), queue(queue) {}
-
-ThreadManager::ThreadManager() {}
-
-vector<int> &ThreadManager::getTabAcks() {
-    return tabAcks;
-}
-
-void ThreadManager::setTabAcks(vector<int> &tabAcks) {
-    ThreadManager::tabAcks = tabAcks;
-}
-
-void ThreadManager::initTabAcks() {
-    for (int i = 0; i < size; i++) {
-        tabAcks.push_back(0);
+//TODO remove this function, use logger or something like that
+void print(ThreadManagerBase &threadState) {
+    printf("[Watek %d; zegar %d] KOLEJKA: ", threadState.getRank(), threadState.getClock());
+    for (QueueElement &elem : threadState.getQueue()) {
+        printf("id: %d time: %d weight: %d; \t", elem.getId(), elem.getTime(), elem.getWeight());
     }
+    printf("KONIEC KOLEJKI\n");
 }
 
-ThreadManager::ThreadManager(int rank, int size) : rank(rank), size(size) {
-    this->initTabAcks();
-    this->myWeight = 40 + rand() % 80;
-    this->clock = 0;
-    this->tabAcks[rank] = 1;
+void ThreadManager::processRequestMessage(int receivedMessage[], MPI_Status receivedMessageStatus) {
 
-    LOG(INFO) << "Start thread: " << rank << " with weight: " << myWeight;
+    int receivedClock, receivedWeight;
+    receivedClock = receivedMessage[0];
+    receivedWeight = receivedMessage[1];
+
+    LOG(INFO) << "DOSTALEM REQUESTA";
+    this->lock();
+
+    this->updateClock(receivedClock);
+
+    //TODO remove this log
+    printf("[Wątek %d - ack] wstawia do kolejki zgłoszenie %d. [zegar = %d]\n", this->getRank(),
+           receivedMessageStatus.MPI_SOURCE, this->getClock());
+
+    this->addRequestToQueue(
+            QueueElement(receivedMessageStatus.MPI_SOURCE, receivedClock, receivedWeight));
+    print(*this);
+
+    int *msg;
+    msg = this->constructMessage();
+    MPI_Send(msg, ThreadManagerBase::MSG_SIZE, MPI_INT, receivedMessageStatus.MPI_SOURCE, ACK, MPI_COMM_WORLD);
+    this->unlock();
 }
 
-void ThreadManager::increaseClock() {
-    this->clock += 1;
-}
+void ThreadManager::processAckMessage(MPI_Status receivedMessageStatus) {
+    printf("[Wątek %d - ack] ustawia w tablicy ack od  %d. [zegar = %d]\n", this->getRank(),
+           receivedMessageStatus.MPI_SOURCE, this->getClock());
 
-int *ThreadManager::constructMessage() {
-    static int message[ThreadManager::MSG_SIZE];
-    message[0] = this->clock;
-    message[1] = this->myWeight;
-    return message;
-}
+    this->lock();
+    this->getTabAcks()[receivedMessageStatus.MPI_SOURCE] = 1;
 
-int ThreadManager::getClock() const {
-    return clock;
-}
-
-void ThreadManager::sendMessageForEverybody(int *msg, MessageType type) {
-    LOG(INFO) << "Send REQUEST, from " << this->rank << " time: " << this->clock;
-    for (int i = 0; i < this->size; i++) {
-        if (i == rank) continue;
-        MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
+    //TODO Create some logger and move it from here
+    //print tabAcks
+    int j;
+    printf("Tab_ack: [ %d", this->getTabAcks()[0]);
+    for (j = 1; j < this->getSize(); j++) {
+        printf(", %d", this->getTabAcks()[j]);
     }
-    LOG(INFO) << "Request was sent by " << this->rank;
-}
+    printf("]\n");
+    cout << "Powinienem budzic!? " << this->getRank() << endl;
+    cout << this->isEveryAck() << " " << this->isEnoughPlaceOnLift() << endl;
+    if (this->isEveryAck() && this->isEnoughPlaceOnLift()) {
+        printf("[Wątek %d - ack] ACK probuje wybudzić wątek :D [zegar = %d]\n", this->getRank(),
+               this->getClock());
 
-void ThreadManager::addOwnRequestToQueue() {
-    QueueElement newElement = QueueElement(this->rank, this->clock, this->myWeight);
-    this->addRequestToQueue(newElement);
-}
-
-void ThreadManager::addRequestToQueue(QueueElement element) {
-    this->queue.push_back(element);
-    this->sortQueue();
-}
-
-// TODO sort it correctly
-void ThreadManager::sortQueue() {
-    sort(this->queue.begin(), this->queue.end());
-}
-
-int ThreadManager::getSumOfWeights() {
-    return accumulate(this->queue.begin(), this->queue.end(), 0,
-                      [](int acc, const QueueElement &queueElement) {
-                          return queueElement.getWeight() + acc;
-                      }
-    );
-}
-
-int ThreadManager::getSumOfACks() {
-    int sum = 0;
-    for (int &ack:this->tabAcks) {
-        sum += ack;
+        this->signal(); // Should wake up *one* thread
     }
-    return sum;
-}
-
-bool ThreadManager::isEveryAck() {
-    cout << "Size: " << this->size << " Sum weights: " << this->getSumOfACks() << endl;
-    return this->getSumOfACks() == this->size;
-}
-
-bool ThreadManager::isEnoughPlaceOnLift() {
-    int sum = 0;
-    for (QueueElement &queueElement: this->queue) {
-        sum += queueElement.getWeight();
-        if (queueElement.getId() == this->rank) break;
-    }
-    return sum <= ThreadManager::CAPACITY;
-}
-
-void ThreadManager::clearAcks() {
-    for (int i = 0; i < this->tabAcks.size(); i++) {
-        this->tabAcks[i] = i == this->rank ? 1 : 0;
-    }
+    this->unlock();
+    cout << "Po funkcji " << this->getRank() << endl;
 
 }
 
-void ThreadManager::removeYourselfFromQueue() {
-    int rank = this->rank;
-    queue.erase(
-            remove_if(queue.begin(), queue.end(),
-                      [rank](const QueueElement &o) { return o.getId() == rank; }),
-            queue.end()
-    );
+void ThreadManager::processReleaseMessage(MPI_Status receivedMessageStatus) {
+    this->lock();
+
+    //TODO Remove this log
+    printf("[Wątek %d - ack] usuwa z kolejki zgłoszenie %d.[zegar = %d]\n", this->getRank(),
+           receivedMessageStatus.MPI_SOURCE,
+           this->getClock());
+
+    int idToRemove = receivedMessageStatus.MPI_SOURCE;
+
+    //TODO Move it to thread manager
+    this->getQueue().erase(
+            remove_if(this->getQueue().begin(), this->getQueue().end(),
+                      [&idToRemove](QueueElement &queue_element) {
+                          return queue_element.getId() == idToRemove;
+                      }),
+            this->getQueue().end());
     this->sortQueue();
 
+    //TODO logger like above
+    print(*this);
+
+    //TODO Remove this log
+    printf("[Wątek %d - ack] Suma wag: %d .[zegar = %d]\n", this->getRank(),
+           this->getSumOfWeights(),
+           this->getClock());
+
+    //TODO Why we dont check acks tab?
+    if (this->isEnoughPlaceOnLift()) {
+        printf("[Wątek %d - ack] RELEASE probuje wybudzić wątek :D [zegar = %d]\n", this->getRank(),
+               this->getClock());
+
+        this->signal();
+    }
+    this->unlock();
 }
 
-bool ThreadManager::IsMyRank(const QueueElement &o) {
-    return o.getId() == this->rank;
-
-}
-
-void ThreadManager::updateClock(int receivedClock) {
-    if (receivedClock > this->clock)
-        this->clock = receivedClock;
-    this->increaseClock();
-}
+ThreadManager::ThreadManager(int rank, int size) : ThreadManagerBase(rank, size) {}
