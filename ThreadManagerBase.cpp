@@ -3,56 +3,25 @@
 #include <cstdlib>
 #include <mpi.h>
 #include <numeric>
+#include <iomanip>
+#include <zconf.h>
 #include "ThreadManagerBase.h"
 #include "easylogging++.h"
 #include "MessageType.h"
+#include "Logger.h"
 
 using namespace std;
 
-int ThreadManagerBase::getRank() {
-    return rank;
-}
-
-void ThreadManagerBase::setRank(int rank) {
-    ThreadManagerBase::rank = rank;
-}
-
 int ThreadManagerBase::getSize() {
     return size;
-}
-
-void ThreadManagerBase::setSize(int size) {
-    ThreadManagerBase::size = size;
-}
-
-int ThreadManagerBase::getMyWeight() {
-    return myWeight;
-}
-
-void ThreadManagerBase::setMyWeight(int myWeight) {
-    ThreadManagerBase::myWeight = myWeight;
 }
 
 vector<QueueElement> &ThreadManagerBase::getQueue() {
     return queue;
 }
 
-void ThreadManagerBase::setQueue(vector<QueueElement> &queue) {
-    ThreadManagerBase::queue = queue;
-}
-
-ThreadManagerBase::ThreadManagerBase(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue)
-        : rank(
-        rank), size(size), myWeight(myWeight), tabAcks(std::move(tabAcks)), queue(queue) {}
-
-ThreadManagerBase::ThreadManagerBase() {}
-
 vector<int> &ThreadManagerBase::getTabAcks() {
     return tabAcks;
-}
-
-void ThreadManagerBase::setTabAcks(vector<int> &tabAcks) {
-    ThreadManagerBase::tabAcks = tabAcks;
 }
 
 void ThreadManagerBase::initTabAcks() {
@@ -84,17 +53,12 @@ int *ThreadManagerBase::constructMessage() {
     return message;
 }
 
-int ThreadManagerBase::getClock() const {
-    return clock;
-}
-
 void ThreadManagerBase::sendMessageForEverybody(int *msg, MessageType type) {
-    LOG(INFO) << "Send REQUEST, from " << this->rank << " time: " << this->clock;
+    LOG(DEBUG) << Logger::main_thread << this->toString() << "Send message for everbody";
     for (int i = 0; i < this->size; i++) {
         if (i == rank) continue;
         MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
     }
-    LOG(INFO) << "Request was sent by " << this->rank;
 }
 
 void ThreadManagerBase::addOwnRequestToQueue() {
@@ -112,14 +76,6 @@ void ThreadManagerBase::sortQueue() {
     sort(this->queue.begin(), this->queue.end());
 }
 
-int ThreadManagerBase::getSumOfWeights() {
-    return accumulate(this->queue.begin(), this->queue.end(), 0,
-                      [](int acc, const QueueElement &queueElement) {
-                          return queueElement.getWeight() + acc;
-                      }
-    );
-}
-
 int ThreadManagerBase::getSumOfACks() {
     int sum = 0;
     for (int &ack:this->tabAcks) {
@@ -129,7 +85,6 @@ int ThreadManagerBase::getSumOfACks() {
 }
 
 bool ThreadManagerBase::isEveryAck() {
-    cout << "Size: " << this->size << " Sum weights: " << this->getSumOfACks() << endl;
     return this->getSumOfACks() == this->size;
 }
 
@@ -149,20 +104,19 @@ void ThreadManagerBase::clearAcks() {
 
 }
 
-void ThreadManagerBase::removeYourselfFromQueue() {
-    int rank = this->rank;
+void ThreadManagerBase::removeFromQueueById(int id) {
     queue.erase(
             remove_if(queue.begin(), queue.end(),
-                      [rank](const QueueElement &o) { return o.getId() == rank; }),
+                      [id](const QueueElement &o) { return o.getId() == id; }),
             queue.end()
     );
     this->sortQueue();
-
 }
 
-bool ThreadManagerBase::IsMyRank(const QueueElement &o) {
-    return o.getId() == this->rank;
-
+void ThreadManagerBase::removeYourselfFromQueue() {
+    LOG(INFO)<<Logger::main_thread<<"Remove yourself from queue";
+    this->removeFromQueueById(this->rank);
+    Logger::queueUpdate(*this);
 }
 
 void ThreadManagerBase::updateClock(int receivedClock) {
@@ -190,4 +144,19 @@ void ThreadManagerBase::wait() {
 
 void ThreadManagerBase::signal() {
     pthread_cond_signal(&this->conditionalMutex);
+}
+
+void ThreadManagerBase::sleepRandomTime(){
+    sleep(1+rand()%5);
+}
+
+string ThreadManagerBase::toString() {
+    std::stringstream ss;
+    ss << left;
+    ss << "[";
+    ss << "ID:" << setw(2) << this->rank;
+    ss << "WEIGHT:" << setw(4) << this->myWeight;
+    ss << "CLOCK:" << setw(3) << this->clock;
+    ss << "]";
+    return ss.str();
 }

@@ -1,33 +1,29 @@
+#include <sstream>
+#include <iomanip>
 #include "QueueElement.h"
 
 int QueueElement::getId() const {
     return id;
 }
 
-void QueueElement::setId(int id) {
-    QueueElement::id = id;
-}
-
-int QueueElement::getTime() {
-    return time;
-}
-
-void QueueElement::setTime(int time) {
-    QueueElement::time = time;
-}
-
 int QueueElement::getWeight() const {
     return weight;
 }
 
-void QueueElement::setWeight(int weight) {
-    QueueElement::weight = weight;
-}
-
 bool QueueElement::operator<(QueueElement &rhs) {
-    if (time == rhs.time) {
-        return id < rhs.id;
-    } else {
+    if (time != rhs.time) {
         return time < rhs.time;
     }
+    return id < rhs.id;
+
+}
+
+string QueueElement::toString() {
+    std::stringstream ss;
+    ss << left;
+    ss << "(CLOCK:" << setw(3) << this->time;
+    ss << "ID:" << setw(2) << this->id;
+    ss << "WEIGHT:" << setw(4) << this->weight;
+    ss << ")";
+    return ss.str();
 }

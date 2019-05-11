@@ -1,6 +1,9 @@
 #ifndef SKI_LIFT_QUEUEELEMENT_H
 #define SKI_LIFT_QUEUEELEMENT_H
 
+#include <string>
+
+using namespace std;
 
 class QueueElement {
 public:
@@ -9,23 +12,16 @@ public:
 
     int getId() const;
 
-    void setId(int id);
-
-    int getTime();
-
-    void setTime(int time);
-
     int getWeight() const;
 
-    void setWeight(int weight);
-
     bool operator<(QueueElement &rhs);
+
+    string toString();
 
 private:
     int id;
     int time;
     int weight;
-
 };
 
 
