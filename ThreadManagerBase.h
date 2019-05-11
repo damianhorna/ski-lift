@@ -19,7 +19,6 @@ protected:
 
     pthread_mutex_t clockMutex;
     pthread_cond_t conditionalMutex;
-
 public:
 
     //TODO Move something to protected section

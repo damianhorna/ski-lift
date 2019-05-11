@@ -54,7 +54,7 @@ int *ThreadManagerBase::constructMessage() {
 }
 
 void ThreadManagerBase::sendMessageForEverybody(int *msg, MessageType type) {
-    LOG(DEBUG) << Logger::main_thread << this->toString() << "Send message for everbody";
+    LOG(DEBUG) << MAIN_MESS << this->toString() << "Send message for everbody";
     for (int i = 0; i < this->size; i++) {
         if (i == rank) continue;
         MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
@@ -114,9 +114,9 @@ void ThreadManagerBase::removeFromQueueById(int id) {
 }
 
 void ThreadManagerBase::removeYourselfFromQueue() {
-    LOG(INFO)<<Logger::main_thread<<"Remove yourself from queue";
+    LOG(INFO) << MAIN_MESS << "Remove yourself from queue";
     this->removeFromQueueById(this->rank);
-    Logger::queueUpdate(*this);
+//    logger.queueUpdate(*this);
 }
 
 void ThreadManagerBase::updateClock(int receivedClock) {
@@ -146,8 +146,8 @@ void ThreadManagerBase::signal() {
     pthread_cond_signal(&this->conditionalMutex);
 }
 
-void ThreadManagerBase::sleepRandomTime(){
-    sleep(1+rand()%5);
+void ThreadManagerBase::sleepRandomTime() {
+    sleep(1 + rand() % 5);
 }
 
 string ThreadManagerBase::toString() {
@@ -156,7 +156,7 @@ string ThreadManagerBase::toString() {
     ss << "[";
     ss << "ID:" << setw(2) << this->rank;
     ss << "WEIGHT:" << setw(4) << this->myWeight;
-    ss << "CLOCK:" << setw(3) << this->clock;
-    ss << "]";
+    ss << "CLOCK:" << setw(2) << this->clock;
+    ss << "] ";
     return ss.str();
 }

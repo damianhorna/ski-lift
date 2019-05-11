@@ -1,10 +1,8 @@
 #ifndef SKI_LIFT_THREADMANAGER_H
 #define SKI_LIFT_THREADMANAGER_H
 
-
-#include "ThreadManagerBase.h"
-
 #include <mpi.h>
+#include "ThreadManagerBase.h"
 
 class ThreadManager : public ThreadManagerBase {
 public:

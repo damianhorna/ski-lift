@@ -21,9 +21,9 @@ bool QueueElement::operator<(QueueElement &rhs) {
 string QueueElement::toString() {
     std::stringstream ss;
     ss << left;
-    ss << "(CLOCK:" << setw(3) << this->time;
+    ss << "(CLOCK:" << setw(2) << this->time;
     ss << "ID:" << setw(2) << this->id;
-    ss << "WEIGHT:" << setw(4) << this->weight;
+    ss << "WEIGHT:" << setw(3) << this->weight;
     ss << ")";
     return ss.str();
 }
