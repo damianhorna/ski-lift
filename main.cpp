@@ -38,7 +38,7 @@ void mainThread(ThreadManagerBase &threadManager) {
         threadManager.clearAcks();
 
         LOG(INFO) << MAIN_MESS << threadManager.toString() << "On lift";
-        sleep(5);
+        sleep(7+rand()%5);
 
         threadManager.increaseClock();
         msg = threadManager.constructMessage();
@@ -86,6 +86,12 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size( MPI_COMM_WORLD, &size );
     MPI_Get_processor_name(processorName,&nameLength);
+
+    if(test == MPI_THREAD_MULTIPLE){
+        cout<<"Jest ok" <<endl;
+    } else {
+        cout<<" Nie jest ok" <<endl;
+    }
 
     srand(time(nullptr) + rank);
 

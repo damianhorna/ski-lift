@@ -32,7 +32,7 @@ void ThreadManagerBase::initTabAcks() {
 
 ThreadManagerBase::ThreadManagerBase(int rank, int size, char *processorName) : rank(rank), size(size), processorName(processorName) {
     this->initTabAcks();
-    this->myWeight = 40 + rand() % 80;
+    this->myWeight = 80 + rand() % 40;
     this->clock = 0;
     this->tabAcks[rank] = 1;
 
