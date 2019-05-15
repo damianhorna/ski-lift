@@ -54,7 +54,7 @@ int *ThreadManagerBase::constructMessage() {
 }
 
 void ThreadManagerBase::sendMessageForEverybody(int *msg, MessageType type) {
-    LOG(DEBUG) << MAIN_MESS << this->toString() << "Send message for everbody";
+    LOG(DEBUG) << MAIN_MESS << this->toString() << "Send message for everybody";
     for (int i = 0; i < this->size; i++) {
         if (i == rank) continue;
         MPI_Send(msg, MSG_SIZE, MPI_INT, i, type, MPI_COMM_WORLD);
