@@ -27,7 +27,6 @@ void mainThread(ThreadManagerBase &threadManager) {
         bool canGoOnLift = false;
         while (!canGoOnLift) {
             if (threadManager.isEnoughPlaceOnLift() && threadManager.isEveryAck()) {
-                LOG(INFO) << MAIN_MESS << threadManager.toString() << "Can go on lift";
                 canGoOnLift = true;
             } else {
                 LOG(INFO) << MAIN_MESS << threadManager.toString() << "Waiting";
