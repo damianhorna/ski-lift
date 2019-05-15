@@ -114,7 +114,7 @@ void ThreadManagerBase::removeFromQueueById(int id) {
 }
 
 void ThreadManagerBase::removeYourselfFromQueue() {
-    LOG(INFO) << MAIN_MESS << "Remove yourself from queue";
+    LOG(INFO) << MAIN_MESS << this->toString() << "Remove yourself from queue";
     this->removeFromQueueById(this->rank);
 //    logger.queueUpdate(*this);
 }
