@@ -1,101 +1,85 @@
 #include <cstdio>
+#include <iomanip>
 #include "ThreadManager.h"
 #include "easylogging++.h"
+#include "Logger.h"
 
-//TODO remove this function, use logger or something like that
-void print(ThreadManagerBase &threadState) {
-    printf("[Watek %d; zegar %d] KOLEJKA: ", threadState.getRank(), threadState.getClock());
-    for (QueueElement &elem : threadState.getQueue()) {
-        printf("id: %d time: %d weight: %d; \t", elem.getId(), elem.getTime(), elem.getWeight());
-    }
-    printf("KONIEC KOLEJKI\n");
-}
-
-void ThreadManager::processRequestMessage(int receivedMessage[], MPI_Status receivedMessageStatus) {
+void ThreadManager::processRequestMessage(const int receivedMessage[], MPI_Status receivedMessageStatus) {
+    LOG(INFO) << REC_MESS << REQ_MESS << this->toString() <<
+              "Request from [" << receivedMessageStatus.MPI_SOURCE << "]";
 
     int receivedClock, receivedWeight;
     receivedClock = receivedMessage[0];
     receivedWeight = receivedMessage[1];
 
-    LOG(INFO) << "DOSTALEM REQUESTA";
     this->lock();
-
     this->updateClock(receivedClock);
-
-    //TODO remove this log
-    printf("[Wątek %d - ack] wstawia do kolejki zgłoszenie %d. [zegar = %d]\n", this->getRank(),
-           receivedMessageStatus.MPI_SOURCE, this->getClock());
-
     this->addRequestToQueue(
             QueueElement(receivedMessageStatus.MPI_SOURCE, receivedClock, receivedWeight));
-    print(*this);
 
-    int *msg;
-    msg = this->constructMessage();
+    //TODO It could be moved outside this function
+    std::stringstream s2;
+    s2 << REC_MESS << this->toString() << "Queue: ";
+    for (QueueElement &elem : this->getQueue()) {
+        s2 << elem.toString() << ",";
+    }
+    LOG(DEBUG) << s2.str();
+    //
+
+    int *msg = this->constructMessage();
+    LOG(DEBUG) << REC_MESS << REQ_MESS << this->toString() << "I will send ACK";
     MPI_Send(msg, ThreadManagerBase::MSG_SIZE, MPI_INT, receivedMessageStatus.MPI_SOURCE, ACK, MPI_COMM_WORLD);
+    LOG(DEBUG) << REC_MESS << REQ_MESS << this->toString() << "ACK was sent";
     this->unlock();
 }
 
 void ThreadManager::processAckMessage(MPI_Status receivedMessageStatus) {
-    printf("[Wątek %d - ack] ustawia w tablicy ack od  %d. [zegar = %d]\n", this->getRank(),
-           receivedMessageStatus.MPI_SOURCE, this->getClock());
-
+    LOG(INFO) << REC_MESS << ACK_MESS << this->toString() <<
+              "Request from [" << receivedMessageStatus.MPI_SOURCE << "]";
     this->lock();
-    this->getTabAcks()[receivedMessageStatus.MPI_SOURCE] = 1;
+    this->tabAcks[receivedMessageStatus.MPI_SOURCE] = 1;
 
-    //TODO Create some logger and move it from here
-    //print tabAcks
-    int j;
-    printf("Tab_ack: [ %d", this->getTabAcks()[0]);
-    for (j = 1; j < this->getSize(); j++) {
-        printf(", %d", this->getTabAcks()[j]);
-    }
-    printf("]\n");
-    cout << "Powinienem budzic!? " << this->getRank() << endl;
-    cout << this->isEveryAck() << " " << this->isEnoughPlaceOnLift() << endl;
     if (this->isEveryAck() && this->isEnoughPlaceOnLift()) {
-        printf("[Wątek %d - ack] ACK probuje wybudzić wątek :D [zegar = %d]\n", this->getRank(),
-               this->getClock());
-
-        this->signal(); // Should wake up *one* thread
+        LOG(DEBUG) << REC_MESS << REL_MESS << this->toString() << "Signal";
+        this->signal();
     }
-    this->unlock();
-    cout << "Po funkcji " << this->getRank() << endl;
 
+    //TODO It could be moved outside this function
+    std::stringstream s1, s2, s3;
+    s1 << REC_MESS << ACK_MESS << this->toString() << "Ack was received from [" << receivedMessageStatus.MPI_SOURCE
+       << "] and ACK Table was updated" << endl;
+    s2 << REC_MESS << ACK_MESS << this->toString() << left << setw(4) << "ID:";
+    s3 << REC_MESS << ACK_MESS << this->toString() << left << setw(4) << "TAB:";
+
+    for (int i = 0; i < this->getSize(); i++) {
+        s2 << setw(2) << i;
+        s3 << setw(2) << this->getTabAcks().at(i);
+    }
+
+    s2 << endl;
+    string result = s1.str() + s2.str() + s3.str();
+    LOG(DEBUG) << result;
+    //
+    this->unlock();
 }
 
 void ThreadManager::processReleaseMessage(MPI_Status receivedMessageStatus) {
     this->lock();
+    LOG(INFO) << REC_MESS << REL_MESS << this->toString() <<
+              "Request from [" << receivedMessageStatus.MPI_SOURCE << "]";
+    this->removeFromQueueById(receivedMessageStatus.MPI_SOURCE);
 
-    //TODO Remove this log
-    printf("[Wątek %d - ack] usuwa z kolejki zgłoszenie %d.[zegar = %d]\n", this->getRank(),
-           receivedMessageStatus.MPI_SOURCE,
-           this->getClock());
-
-    int idToRemove = receivedMessageStatus.MPI_SOURCE;
-
-    //TODO Move it to thread manager
-    this->getQueue().erase(
-            remove_if(this->getQueue().begin(), this->getQueue().end(),
-                      [&idToRemove](QueueElement &queue_element) {
-                          return queue_element.getId() == idToRemove;
-                      }),
-            this->getQueue().end());
-    this->sortQueue();
-
-    //TODO logger like above
-    print(*this);
-
-    //TODO Remove this log
-    printf("[Wątek %d - ack] Suma wag: %d .[zegar = %d]\n", this->getRank(),
-           this->getSumOfWeights(),
-           this->getClock());
+    //TODO It could be moved outside this function
+    std::stringstream s2;
+    s2 << REC_MESS << this->toString() << "Queue: ";
+    for (QueueElement &elem : this->getQueue()) {
+        s2 << elem.toString() << ",";
+    }
+    LOG(DEBUG) << s2.str();
 
     //TODO Why we dont check acks tab?
     if (this->isEnoughPlaceOnLift()) {
-        printf("[Wątek %d - ack] RELEASE probuje wybudzić wątek :D [zegar = %d]\n", this->getRank(),
-               this->getClock());
-
+        LOG(DEBUG) << REC_MESS << REL_MESS << this->toString() << "Signal";
         this->signal();
     }
     this->unlock();

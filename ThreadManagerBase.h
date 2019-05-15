@@ -8,7 +8,6 @@
 
 using namespace std;
 
-//TODO Clean here xDDD and change functions to private
 class ThreadManagerBase {
 protected:
     int rank;
@@ -18,51 +17,31 @@ protected:
     vector<int> tabAcks;
     vector<QueueElement> queue;
 
-    bool IsMyRank(const QueueElement &o);
-
     pthread_mutex_t clockMutex;
     pthread_cond_t conditionalMutex;
-
 public:
-    ThreadManagerBase(int rank, int size, int myWeight, vector<int> tabAcks, vector<QueueElement> &queue);
 
-    ThreadManagerBase();
-
-    ThreadManagerBase(int rank, int size);
-
-    int getRank();
-
-    void setRank(int rank);
-
-    int getSize();
-
-    void setSize(int size);
-
-    int getMyWeight();
-
-    void setMyWeight(int myWeight);
-
-    vector<QueueElement> &getQueue();
-
-    void setQueue(vector<QueueElement> &queue);
-
-    vector<int> &getTabAcks();
-
-    void setTabAcks(vector<int> &tabAcks);
-
-    void initTabAcks();
+    //TODO Move something to protected section
 
     static const int MSG_SIZE = 2;
 
     static const int CAPACITY = 500;
+
+    ThreadManagerBase(int rank, int size);
+
+    int getSize();
+
+    vector<QueueElement> &getQueue();
+
+    vector<int> &getTabAcks();
+
+    void initTabAcks();
 
     void increaseClock();
 
     void updateClock(int receivedClock);
 
     int *constructMessage();
-
-    int getClock() const;
 
     void sendMessageForEverybody(int *msg, MessageType type);
 
@@ -80,8 +59,6 @@ public:
 
     void removeYourselfFromQueue();
 
-    int getSumOfWeights();
-
     int getSumOfACks();
 
     void lock();
@@ -93,6 +70,13 @@ public:
     void signal();
 
     virtual ~ThreadManagerBase();
+
+    void removeFromQueueById(int id);
+
+    string toString();
+
+    void sleepRandomTime();
+
 };
 
 
