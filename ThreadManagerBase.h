@@ -25,7 +25,7 @@ public:
 
     static const int MSG_SIZE = 2;
 
-    static const int CAPACITY = 500;
+    static const int CAPACITY = 200;
 
     ThreadManagerBase(int rank, int size);
 
