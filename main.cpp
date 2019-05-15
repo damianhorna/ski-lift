@@ -18,6 +18,7 @@ INITIALIZE_EASYLOGGINGPP
 void mainThread(ThreadManagerBase &threadManager) {
 
     while (true) {
+        cout<<"Przed lockiem"<<endl;
         threadManager.lock();
         threadManager.increaseClock();
         int *msg = threadManager.constructMessage();
@@ -65,10 +66,10 @@ void receivingThread(ThreadManager &threadManager) {
                 threadManager.processRequestMessage(receivedMessage, receivedMessageStatus);
                 break;
             case ACK:
-                threadManager.processAckMessage(receivedMessageStatus);
-                break;
-            case REALEASE:
-                threadManager.processReleaseMessage(receivedMessageStatus);
+           README.md     threadManager.processAckMessage(receivedMessageStatus);
+           README.md     break;
+           README.md case REALEASE:
+           README.md     threadManager.processReleaseMessage(receivedMessageStatus);
                 break;
         }
     }
@@ -78,15 +79,17 @@ int main(int argc, char **argv) {
     //TODO set settings in logs to remove unnecessary information
     START_EASYLOGGINGPP(argc, argv);
 
-    int rank = 0, size = 10, test = 0;
+    int rank = 0, size = 10, test = 0, nameLength;
+    char processorName[20];
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &test);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_size( MPI_COMM_WORLD, &size );
+    MPI_Get_processor_name(processorName,&nameLength);
 
     srand(time(nullptr) + rank);
 
-    ThreadManager threadManager(rank, size);
+    ThreadManager threadManager(rank, size, processorName);
 
     thread t[2];
     t[0] = thread(mainThread, ref(threadManager));

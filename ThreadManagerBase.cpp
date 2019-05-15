@@ -30,7 +30,7 @@ void ThreadManagerBase::initTabAcks() {
     }
 }
 
-ThreadManagerBase::ThreadManagerBase(int rank, int size) : rank(rank), size(size) {
+ThreadManagerBase::ThreadManagerBase(int rank, int size, char *processorName) : rank(rank), size(size), processorName(processorName) {
     this->initTabAcks();
     this->myWeight = 40 + rand() % 80;
     this->clock = 0;
@@ -157,6 +157,7 @@ string ThreadManagerBase::toString() {
     ss << "ID:" << setw(2) << this->rank;
     ss << "WEIGHT:" << setw(4) << this->myWeight;
     ss << "CLOCK:" << setw(2) << this->clock;
+    ss << "COMP:" << setw(11) << this->processorName;
     ss << "] ";
     return ss.str();
 }

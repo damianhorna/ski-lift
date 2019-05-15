@@ -14,6 +14,7 @@ protected:
     int size;
     int myWeight;
     int clock;
+    char *processorName;
     vector<int> tabAcks;
     vector<QueueElement> queue;
 
@@ -27,7 +28,7 @@ public:
 
     static const int CAPACITY = 200;
 
-    ThreadManagerBase(int rank, int size);
+    ThreadManagerBase(int rank, int size, char processorName[]);
 
     int getSize();
 

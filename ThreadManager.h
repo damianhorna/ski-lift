@@ -6,7 +6,7 @@
 
 class ThreadManager : public ThreadManagerBase {
 public:
-    ThreadManager(int rank, int size);
+    ThreadManager(int rank, int size, char processorName[]);
 
     void processRequestMessage(const int receivedMessage[], MPI_Status receivedMessageStatus);
 

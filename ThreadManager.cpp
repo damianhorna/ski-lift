@@ -24,7 +24,7 @@ void ThreadManager::processRequestMessage(const int receivedMessage[], MPI_Statu
         s2 << elem.toString() << ",";
     }
     LOG(DEBUG) << s2.str();
-    //
+    
 
     int *msg = this->constructMessage();
     LOG(DEBUG) << REC_MESS << REQ_MESS << this->toString() << "I will send ACK";
@@ -85,4 +85,4 @@ void ThreadManager::processReleaseMessage(MPI_Status receivedMessageStatus) {
     this->unlock();
 }
 
-ThreadManager::ThreadManager(int rank, int size) : ThreadManagerBase(rank, size) {}
+ThreadManager::ThreadManager(int rank, int size, char processorName[]) : ThreadManagerBase(rank, size, processorName) {}

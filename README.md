@@ -2,6 +2,7 @@
 ```bash
 mpic++ main.cpp QueueElement.cpp QueueElement.h ThreadManagerBase.cpp ThreadManagerBase.h easylogging++.h easylogging++.cc MessageType.h ThreadManager.cpp ThreadManager.h Logger.h -std=c++11 -pthread -o ski.out
 mpirun -n 2 ski.out
+mpirun -n 4 --hostfile hostfile ski.out | grep -e "INFO.*MAI"
 ```
 
 ### Logger:
