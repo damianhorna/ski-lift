@@ -66,10 +66,10 @@ void receivingThread(ThreadManager &threadManager) {
                 threadManager.processRequestMessage(receivedMessage, receivedMessageStatus);
                 break;
             case ACK:
-           README.md     threadManager.processAckMessage(receivedMessageStatus);
-           README.md     break;
-           README.md case REALEASE:
-           README.md     threadManager.processReleaseMessage(receivedMessageStatus);
+                threadManager.processAckMessage(receivedMessageStatus);
+                break;
+            case REALEASE:
+                threadManager.processReleaseMessage(receivedMessageStatus);
                 break;
         }
     }
