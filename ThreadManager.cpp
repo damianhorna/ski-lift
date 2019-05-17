@@ -23,13 +23,13 @@ void ThreadManager::processRequestMessage(const int receivedMessage[], MPI_Statu
     for (QueueElement &elem : this->getQueue()) {
         s2 << elem.toString() << ",";
     }
-    LOG(DEBUG) << s2.str();
+    LOG(INFO) << s2.str();
     
 
     int *msg = this->constructMessage();
-    LOG(DEBUG) << REC_MESS << REQ_MESS << this->toString() << "I will send ACK";
+    LOG(INFO) << REC_MESS << REQ_MESS << this->toString() << "I will send ACK";
     MPI_Send(msg, ThreadManagerBase::MSG_SIZE, MPI_INT, receivedMessageStatus.MPI_SOURCE, ACK, MPI_COMM_WORLD);
-    LOG(DEBUG) << REC_MESS << REQ_MESS << this->toString() << "ACK was sent";
+    LOG(INFO) << REC_MESS << REQ_MESS << this->toString() << "ACK was sent";
     this->unlock();
 }
 
@@ -39,10 +39,8 @@ void ThreadManager::processAckMessage(MPI_Status receivedMessageStatus) {
     this->lock();
     this->tabAcks[receivedMessageStatus.MPI_SOURCE] = 1;
 
-    if (this->isEveryAck() && this->isEnoughPlaceOnLift()) {
-        LOG(DEBUG) << REC_MESS << REL_MESS << this->toString() << "Signal";
-        this->signal();
-    }
+    LOG(INFO) << REC_MESS << REL_MESS << this->toString() << "Signal";
+    this->signal();
 
     //TODO It could be moved outside this function
     std::stringstream s1, s2, s3;
@@ -58,8 +56,7 @@ void ThreadManager::processAckMessage(MPI_Status receivedMessageStatus) {
 
     s2 << endl;
     string result = s1.str() + s2.str() + s3.str();
-    LOG(DEBUG) << result;
-    //
+    LOG(INFO) << result;
     this->unlock();
 }
 
@@ -75,13 +72,9 @@ void ThreadManager::processReleaseMessage(MPI_Status receivedMessageStatus) {
     for (QueueElement &elem : this->getQueue()) {
         s2 << elem.toString() << ",";
     }
-    LOG(DEBUG) << s2.str();
-
-    //TODO Why we dont check acks tab?
-    if (this->isEnoughPlaceOnLift()) {
-        LOG(DEBUG) << REC_MESS << REL_MESS << this->toString() << "Signal";
-        this->signal();
-    }
+    LOG(INFO) << s2.str();
+    LOG(INFO) << REC_MESS << REL_MESS << this->toString() << "Signal";
+    this->signal();
     this->unlock();
 }
 

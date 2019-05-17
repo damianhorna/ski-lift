@@ -18,7 +18,6 @@ INITIALIZE_EASYLOGGINGPP
 void mainThread(ThreadManagerBase &threadManager) {
 
     while (true) {
-        cout<<"Przed lockiem"<<endl;
         threadManager.lock();
         threadManager.increaseClock();
         int *msg = threadManager.constructMessage();
@@ -38,7 +37,7 @@ void mainThread(ThreadManagerBase &threadManager) {
         threadManager.clearAcks();
 
         LOG(INFO) << MAIN_MESS << threadManager.toString() << "On lift";
-        sleep(7+rand()%5);
+        sleep(7 + rand() % 5);
 
         threadManager.increaseClock();
         msg = threadManager.constructMessage();
@@ -76,7 +75,6 @@ void receivingThread(ThreadManager &threadManager) {
 }
 
 int main(int argc, char **argv) {
-    //TODO set settings in logs to remove unnecessary information
     START_EASYLOGGINGPP(argc, argv);
 
     int rank = 0, size = 10, test = 0, nameLength;
@@ -84,13 +82,13 @@ int main(int argc, char **argv) {
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &test);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size( MPI_COMM_WORLD, &size );
-    MPI_Get_processor_name(processorName,&nameLength);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Get_processor_name(processorName, &nameLength);
 
-    if(test == MPI_THREAD_MULTIPLE){
-        cout<<"Jest ok" <<endl;
+    if (test == MPI_THREAD_MULTIPLE) {
+        LOG(INFO) << "Thread multiple support";
     } else {
-        cout<<" Nie jest ok" <<endl;
+        LOG(INFO) << "No support for thread multiple";
     }
 
     srand(time(nullptr) + rank);
